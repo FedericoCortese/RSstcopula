@@ -3,7 +3,7 @@ library(RcppArmadillo)
 library(roptim)
 
 
-sourceCpp("RSest_trede_C.cpp")
+sourceCpp("RSest_C.cpp")
 
 Est_comp_C=function(U, reg, maxiter = 1000,eps=1e-08, 
                     ninit = 1,h=0){
