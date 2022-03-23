@@ -2,9 +2,83 @@ library(Rcpp)
 library(RcppArmadillo)
 library(roptim)
 
+# simulation --------------------------------------------------------------
+library(copula)
+copSim=function(n,d=5,R, nu, Q, init,seed){
+  #This function simulates a d-variate dataset of uniform pseudo observations
+  #distributed as a RS Student t copula with parameters dof nu, dependence matrices R,
+  #initial and transition probabilities init and Q. 
+  #nu is a vector with length equal to the number of hidden states r.
+  #R is an array of dimension dxdxr
+  #Q is a matrix of dimension rxr
+  #init is a vector of the same length of nu
+  
+  #markov chain simulation
+  reg = dim(Q)[1]
+  x <- numeric(n)
+  set.seed(seed)
+  x[1] <- sample(1:reg, 1, prob = init)
+  for(i in 2:n){
+    x[i] <- sample(1:reg, 1, prob = Q[x[i - 1], ])
+  }
+  
+  Sim = matrix(0, n, d * reg)
+  SimData = matrix(0, n, d)
+  
+  #pseudo-observations simulation
+  for (k in 1:reg) {
+    u = rCopula(n, copula::tCopula(param=P2p(R[,,k]), dim = d,df=nu[k],dispstr = "un"))
+    Sim[, (d * k - d + 1):(d * k)] = u
+  }
+  
+  for (i in 1:n) {
+    k = x[i]
+    SimData[i, ] = Sim[i, (d * k - d + 1):(d * k)]
+  }
+  return(SimData)
+  
+}
 
+###
+R1=matrix(c(1,.9,.7,
+            .9, 1,.75,
+            .7, .75, 1),3,3)
+
+R2=matrix(c(1,.5,.3,
+            .5, 1,-.4,
+            .3, -.4, 1),3,3)
+
+R3=matrix(c(1,.1,.15,
+            .1,1,-.1,
+            .15,-.1,1),3,3)
+
+Rtrue=array(0,dim=c(3,3,3))
+Rtrue[,,1]=R1;
+Rtrue[,,2]=R2;
+Rtrue[,,3]=R3;
+
+nutrue=c(3,6,10)
+
+Qtrue=matrix(c(.7,.2,.1,
+               .4,.5,.1,
+               .1,.1,.8),3,3,byrow=T)
+inittrue=rep(1/3,3)
+
+library(copula)
+
+Us=copSim(1000,d=3,Rtrue, nutrue, Qtrue, inittrue,seed=1)
+
+
+# estimation --------------------------------------------------------------
+
+#The following file should be saved on the working directory
 sourceCpp("RSest_C.cpp")
 
+#The following function estimates a RSStC model. 
+#U is the matrix of uniform pseudo observations
+#maxiter and eps define the maximum number of iterations and the tolerance level for the convergence of the EM algorithm
+#ninit sets the number of tuning iterations of the algorithm
+#h is the weight put on the main diagonal of the initial estimate for the transition matrix
 Est_comp_C=function(U, reg, maxiter = 1000,eps=1e-08, 
                     ninit = 1,h=0){
 
@@ -82,87 +156,10 @@ Est_comp_C=function(U, reg, maxiter = 1000,eps=1e-08,
   
 }
 
-
-tailInd=function(est){
-  k=length(est$nu)
-  d=dim(est$R)[1]
-  lambda=array(0,dim=c(d,d,k))
-  for(i in 1:k){
-    R=est$R[,,i]
-    nu=est$nu[i]
-    lambda[,,i]=2*dt(-(sqrt(1+nu)*sqrt(1-R))/sqrt(1+R),df=nu+1)
-    diag(lambda[,,i])=1
-  }
-  return(lambda)
-}
-
-kendTau=function(est){
-  k=length(est$nu)
-  d=dim(est$R)[1]
-  tau=array(0,dim=c(d,d,k))
-  for(i in 1:k){
-    R=est$R[,,i]
-    #nu=est$nu[i]
-    tau[,,i]=asin(R)*2/pi
-    diag(tau[,,i])=1
-  }
-  return(tau)
-}
+est=Est_comp_C(Us,3)
 
 
-# simulation --------------------------------------------------------------
-copSim=function(n,d=5,R, nu, Q, init,seed){
-  
-  #markov chain simulation
-  reg = dim(Q)[1]
-  x <- numeric(n)
-  set.seed(seed)
-  x[1] <- sample(1:reg, 1, prob = init)
-  for(i in 2:n){
-    x[i] <- sample(1:reg, 1, prob = Q[x[i - 1], ])
-  }
-  # 
-  Sim = matrix(0, n, d * reg)
-  SimData = matrix(0, n, d)
-  
-  for (k in 1:reg) {
-    u = copula::rCopula(n, copula::tCopula(param=P2p(R[,,k]), dim = d,df=nu[k],dispstr = "un"))
-    Sim[, (d * k - d + 1):(d * k)] = u
-  }
-  
-  for (i in 1:n) {
-    k = x[i]
-    SimData[i, ] = Sim[i, (d * k - d + 1):(d * k)]
-  }
-  return(SimData)
-  
-}
 
-###
-R1=matrix(c(1,.9,.7,
-            .9, 1,.75,
-            .7, .75, 1),3,3)
 
-R2=matrix(c(1,.5,.3,
-            .5, 1,-.4,
-            .3, -.4, 1),3,3)
 
-R3=matrix(c(1,.1,.15,
-            .1,1,-.1,
-            .15,-.1,1),3,3)
 
-Rtrue=array(0,dim=c(3,3,3))
-Rtrue[,,1]=R1;
-Rtrue[,,2]=R2;
-Rtrue[,,3]=R3;
-
-nutrue=c(3,6,10)
-
-Qtrue=matrix(c(.7,.2,.1,
-               .4,.5,.1,
-               .1,.1,.8),3,3,byrow=T)
-inittrue=rep(1/3,3)
-
-library(copula)
-
-Us=copSim(1000,d=5,Rtrue, nutrue, Qtrue, inittrue,seed=1)
