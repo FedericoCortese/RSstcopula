@@ -6,7 +6,7 @@ library(roptim)
 library(copula)
 copSim=function(n,d=5,R, nu, Q, init,seed){
   #This function simulates a d-variate dataset of uniform pseudo observations
-  #distributed as a RS Student t copula with parameters dof nu, dependence matrices R,
+  #distributed as a RS Student t copula with parameters: number of dof nu, dependence matrices R,
   #initial and transition probabilities init and Q. 
   #nu is a vector with length equal to the number of hidden states r.
   #R is an array of dimension dxdxr
@@ -39,7 +39,7 @@ copSim=function(n,d=5,R, nu, Q, init,seed){
   
 }
 
-###
+#The following is an example on how to simulate from a 3-states RSStC model with 3 marginals
 R1=matrix(c(1,.9,.7,
             .9, 1,.75,
             .7, .75, 1),3,3)
@@ -71,7 +71,7 @@ Us=copSim(1000,d=3,Rtrue, nutrue, Qtrue, inittrue,seed=1)
 
 # estimation --------------------------------------------------------------
 
-#The file "RSest_C.cpp" should be saved on the working directory
+#The file "RSest_C.cpp" must be saved on the working directory and loaded via the following code
 sourceCpp("RSest_C.cpp")
 
 #The following function estimates a RSStC model. 
@@ -156,6 +156,7 @@ Est_comp_C=function(U, reg, maxiter = 1000,eps=1e-08,
   
 }
 
+#The following estimates a RSStC model with 3 states considering the previously simulated dataset
 est=Est_comp_C(Us,3)
 
 
