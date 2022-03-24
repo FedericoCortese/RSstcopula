@@ -1,6 +1,10 @@
 library(copula)
 
 RScop.viterbi <- function(U, nc){
+  #This function performs the Viterbi algorithm for the global decoding
+  #U is the matrix of uniform pseudo obs
+  #nc is the output object of the function "Est_comp_C"
+  
   init = nc$init
   Q = nc$Q
   R=nc$R

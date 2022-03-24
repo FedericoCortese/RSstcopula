@@ -1,8 +1,6 @@
 
 # semiparam__2-states -----------------------------------------------------
 library(bootstrap)
-#theta <- function(x){mean(x)} 
-#results = bootstrap(testFile,100,theta) 
 library(boot)
 library(parallel)
 library(rugarch)
@@ -11,21 +9,24 @@ library(skewt)
 
 
 semiparametric_RScop_boot <- function(x) {
-  #marginal parameters
+  #This function performs the bootstrap for the estimation of standard errors of RSStC model with 2 states
+  #adopting the semiparametric approach
+  #x is the matrix of observations
+  
+  #marginals
   R=apply(x,2,rank)/(dim(x)[1]+1)
   
   #RS copula param
-  #sourceCpp("RSest_trede_C.cpp")
   est_rsc=Est_comp_C(R,2)
   Qvec=as.vector(est_rsc$Q)
   Rvec=as.vector(apply(est_rsc$R,3,function(x)x[upper.tri(x)]))
-  #Rvec=as.vector(est_rsc$R)
   cop.pars=c(est_rsc$init,Qvec,Rvec,est_rsc$nu)
   return(cop.pars)
 }
 
 l1=round(dim(x)[1]^(2/3))
-nboot=1000
+#nboot=1000
+nboot=100
 library(bootstrap)
 library(boot)
 startsp2=Sys.time()
@@ -42,17 +43,16 @@ library(bootstrap)
 #results = bootstrap(testFile,100,theta) 
 library(boot)
 library(parallel)
-library(rugarch)
-library(fGarch)
-library(skewt)
-
 
 semiparametric_RScop_boot <- function(x) {
-  #marginal parameters
+  #This function performs the bootstrap for the estimation of standard errors of RSStC model with 3 states
+  #adopting the semiparametric approach
+  #x is the matrix of observations
+  
+  #marginals
   R=apply(x,2,rank)/(dim(x)[1]+1)
   
   #RS copula param
-  #sourceCpp("RSest_trede_C.cpp")
   est_rsc=Est_comp_C(R,3)
   Qvec=as.vector(est_rsc$Q)
   Rvec=as.vector(apply(est_rsc$R,3,function(x)x[upper.tri(x)]))
@@ -74,8 +74,15 @@ endsp2-startsp2
 
 
 # param__2-states ---------------------------------------------------------
-#x=as.matrix(data[,7:11])
-parametric_RScop_boot <- function(U) {
+library(rugarch)
+library(fGarch)
+library(skewt)
+parametric_RScop_boot <- function(x) {
+  #This function performs the bootstrap for the estimation of standard errors of RSStC model with 2 states
+  #adopting the parametric approach
+  #x is the matrix of observations: marginal distribution are here specified in terms of an ARMA(1,1)-GARCH(1,1)
+  #model with skewed GED for the error terms
+  
   #marginal parameters
   btc = x[,1]
   eth=x[,2]
@@ -142,7 +149,9 @@ parametric_RScop_boot <- function(U) {
 }
 
 l1=round(dim(U)[1]^(2/3))
-nboot=1000
+#nboot=1000
+nboot=100
+
 library(bootstrap)
 library(boot)
 startp2=Sys.time()
@@ -154,8 +163,15 @@ endp2-startp2
 
 
 # param__3-states ---------------------------------------------------------
-
-parametric_RScop_boot <- function(U) {
+library(rugarch)
+library(fGarch)
+library(skewt)
+parametric_RScop_boot <- function(x) {
+  #This function performs the bootstrap for the estimation of standard errors of RSStC model with 3 states
+  #adopting the parametric approach
+  #x is the matrix of observations: marginal distribution are here specified in terms of an ARMA(1,1)-GARCH(1,1)
+  #model with skewed GED for the error terms
+  
   #marginal parameters
   btc = x[,1]
   eth=x[,2]
@@ -212,7 +228,6 @@ parametric_RScop_boot <- function(U) {
   U=apply(UU,2,rank)/(dim(UU)[1]+1)
   
   #RS copula param
-  #sourceCpp("RSest_trede_C.cpp")
   est_rsc=Est_comp_C(U,3)
   Qvec=as.vector(est_rsc$Q)
   Rvec=as.vector(apply(est_rsc$R,3,function(x)x[upper.tri(x)]))
@@ -222,14 +237,14 @@ parametric_RScop_boot <- function(U) {
 }
 
 l1=round(dim(U)[1]^(2/3))
-nboot=1000
+#nboot=1000
+nboot=100
+
 library(bootstrap)
 library(boot)
-startp2=Sys.time()
+startp=Sys.time()
 param_boot_3p <- tsboot(U, parametric_RScop_boot, R = nboot, l = l1, sim = "geom",
                         parallel = "multicore", ncpus = detectCores(), n.sim=dim(x)[1])
 
-endp2=Sys.time()
-endp2-startp2
-
-
+endp=Sys.time()
+endp-startp

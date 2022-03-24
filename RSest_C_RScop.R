@@ -71,7 +71,7 @@ Us=copSim(1000,d=3,Rtrue, nutrue, Qtrue, inittrue,seed=1)
 
 # estimation --------------------------------------------------------------
 
-#The following file should be saved on the working directory
+#The file "RSest_C.cpp" should be saved on the working directory
 sourceCpp("RSest_C.cpp")
 
 #The following function estimates a RSStC model. 
@@ -157,9 +157,5 @@ Est_comp_C=function(U, reg, maxiter = 1000,eps=1e-08,
 }
 
 est=Est_comp_C(Us,3)
-
-
-
-
 
 
