@@ -74,13 +74,13 @@ Us=copSim(1000,d=3,Rtrue, nutrue, Qtrue, inittrue,seed=1)
 #The file "RSest_C.cpp" must be saved on the working directory and loaded via the following code
 sourceCpp("RSest_C.cpp")
 
-#The following function estimates a RSStC model. 
-#U is the matrix of uniform pseudo observations
-#maxiter and eps define the maximum number of iterations and the tolerance level for the convergence of the EM algorithm
-#ninit sets the number of tuning iterations of the algorithm
-#h is the weight put on the main diagonal of the initial estimate for the transition matrix
 Est_comp_C=function(U, reg, maxiter = 1000,eps=1e-08, 
                     ninit = 1,h=0){
+  #This function estimates a RSStC model. 
+  #U is the matrix of uniform pseudo observations
+  #maxiter and eps define the maximum number of iterations and the tolerance level for the convergence of the EM algorithm
+  #ninit sets the number of tuning iterations of the algorithm
+  #h is the weight put on the main diagonal of the initial estimate for the transition matrix
 
   n = dim(U)[1]
   d = dim(U)[2]
