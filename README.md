@@ -8,4 +8,4 @@ The file contained in the repository are:
 - boot_github.R to performe bootstrap for the estimation of standard errors
 - decoding_github.R contains the R functions for the global decoding performed through the Viterbi algorithm
 
-A simulated dataset, named simdata5.txt, is also available.
+A simulated 5-dimensional dataset of log-returns, named simdata5.txt, is also available. It consists of 500 time observations.
