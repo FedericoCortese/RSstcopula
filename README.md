@@ -1,6 +1,6 @@
 # RSstcopula
-This repository containts the R functions for the estimation and simulation of a regime switching Student-t copula model adopting the EM algorithm.
-The model is described in the paper with title "Maximum likelihood estimation of multivariate regime switching Student-t copula model" by Federico P. Cortese, Francesco Bartolucci and Fulvia Pennoni.
+This repository containts the R functions for estimation and simulation of a regime switching Student-t copula model adopting the EM algorithm.
+The model is described in the paper "Maximum likelihood estimation of multivariate regime switching Student-t copula model" by Federico P. Cortese, Francesco Bartolucci and Fulvia Pennoni.
 The file contained in the repository are:
 - RSest_C_RScop.R for simulating and estimating a RSStC model
 - RSest_C.cpp which contains the functions implemented in C++. This file must be saved on the working directory.
