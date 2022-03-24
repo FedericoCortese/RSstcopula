@@ -447,7 +447,7 @@ Rcpp::List EMstepC(arma::mat U, arma::cube R, arma::vec nu, arma::mat Q, arma::v
     // upper[0]=log(100);
     //nu0=nu[k];
     lower[0]=2;
-    upper[0]=75;
+    upper[0]=50;
     Fun rb(Rtnew,U,w,k);
     Roptim<Fun> opt("L-BFGS-B");
     //Roptim<Fun> opt("SANN");
