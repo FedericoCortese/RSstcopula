@@ -23,7 +23,7 @@ inittrue2=rep(.5,2)
 stime_trede <- function(seed) {
   Us=copSim(1500,5,Rtrue2,nutrue2,Qtrue2,inittrue2,seed)
   
-  est = Est_comp_C(Us, reg=3, maxiter = 1000,eps=1e-08, 
+  est = Est_comp_C(Us, reg=2, maxiter = 1000,eps=1e-08, 
                    ninit = 1,h=0)
   return(est)
 }
@@ -147,6 +147,26 @@ stime_trede <- function(seed,n_sim,reg,Rtrue,nutrue,Qtrue,inittrue) {
   return(est)
 }
 
+startd = Sys.time()
+sim_est_d2 <- parallel::mclapply(X=1:nrow(simulazione),
+                                function(x) stime_trede(seed=simulazione[x,]$n_seed,
+                                                        n_sim=simulazione[x,]$n_sim,reg=2,
+                                                        nutrue=nutrue2,Rtrue=Rtrue2,
+                                                        Qtrue=Qtrue2,inittrue = inittrue2) ,
+                                mc.cores = parallel::detectCores()-1)
+endd = Sys.time()
+elapsedd = endd - startd
+
+startd = Sys.time()
+sim_est_d3 <- parallel::mclapply(X=1:nrow(simulazione),
+                                function(x) stime_trede(seed=simulazione[x,]$n_seed,
+                                                        n_sim=simulazione[x,]$n_sim,reg=3,
+                                                        nutrue=nutrue3,Rtrue=Rtrue3,
+                                                        Qtrue=Qtrue3,inittrue = inittrue3) ,
+                                mc.cores = parallel::detectCores()-1)
+endd = Sys.time()
+elapsedd = endd - startd
+
 
 ##varying r
 
@@ -180,7 +200,7 @@ stime_trede <- function(seed,d,nutrue,Qtrue,inittrue) {
 
 
 startd = Sys.time()
-sim_est_d <- parallel::mclapply(X=1:nrow(simulazione), 
+sim_est_dn2 <- parallel::mclapply(X=1:nrow(simulazione), 
                                 function(x) stime_trede(seed=simulazione[x,]$n_seed,
                                                         d=simulazione[x,]$n_d,
                                                         nutrue=nutrue,
@@ -224,7 +244,7 @@ stime_trede <- function(seed,d,nutrue,Qtrue,inittrue) {
 
 
 startd = Sys.time()
-sim_est_d3 <- parallel::mclapply(X=1:nrow(simulazione), 
+sim_est_dn3 <- parallel::mclapply(X=1:nrow(simulazione), 
                                 function(x) stime_trede(seed=simulazione[x,]$n_seed,
                                                         d=simulazione[x,]$n_d,
                                                         nutrue=nutrue,
