@@ -1,5 +1,9 @@
+# This script contains the R functions needed to perform the block-bootstraps presented 
+# in the paper.
 
-# semiparam__2-states -----------------------------------------------------
+# We make use of the function "mclapply" from the R package "parallel" to perform parallel computing
+# We recall that it can be used only on Linux and Mac because it relies on forking and hence is not available on Windows
+
 library(bootstrap)
 library(boot)
 library(parallel)
@@ -7,16 +11,27 @@ library(rugarch)
 library(fGarch)
 library(skewt)
 
+x=read.table("simdata5.txt")
+x=as.matrix(x)
+d=dim(x)[2]
+
+# semiparam__2-states -----------------------------------------------------
 
 semiparametric_RScop_boot <- function(x) {
-  #This function performs the bootstrap for the estimation of standard errors of RSStC model with 2 states
-  #adopting the semiparametric approach
-  #x is the matrix of observations
   
-  #marginals
+  # This function performs the bootstrap for the estimation of standard errors of RSStC model parameters
+  # with 2 states, estimated adopting the semiparametric approach
+  
+  # ARGUMENTS:
+  # x is the matrix of observations
+  
+  # VALUES:
+  # cop.pars is the vector of RSStC copula parameters
+  
+  # marginals
   R=apply(x,2,rank)/(dim(x)[1]+1)
   
-  #RS copula param
+  # RS copula param
   est_rsc=Est_comp_C(R,2)
   Qvec=as.vector(est_rsc$Q)
   Rvec=as.vector(apply(est_rsc$R,3,function(x)x[upper.tri(x)]))
@@ -24,30 +39,48 @@ semiparametric_RScop_boot <- function(x) {
   return(cop.pars)
 }
 
+# The average block-length for the block-bootstrap is the equal to l1 as suggested in Politis and Roman (1994)
 l1=round(dim(x)[1]^(2/3))
 #nboot=1000
-nboot=100
-library(bootstrap)
-library(boot)
+nboot=2
+
+set.seed(1)
 startsp2=Sys.time()
 param_boot_2sp <- tsboot(x, semiparametric_RScop_boot, R = nboot, l = l1, sim = "geom",
-                         parallel = "multicore", ncpus = detectCores(), n.sim=dim(x)[1])
+                         parallel = "multicore", ncpus = detectCores()-1, n.sim=dim(x)[1])
 
 endsp2=Sys.time()
 endsp2-startsp2
 
+sp2=param_boot_2sp$t
+SE_sp2=apply(sp2,2,sd)
+reg=2
+
+# Standard errors:
+
+# Initial probabilities
+round(SE_sp2[1:reg],3)
+
+# Transition probabilities
+round(SE_sp2[(reg+1):(reg*reg+reg)],3)
+
+# Dependence matrices
+round(SE_sp2[(reg*reg+reg+1):(length(SE_sp2)-reg)],3)
+
+# Number of degrees-of-freedom
+round(tail(SE_sp2,reg),3)
+
 # semiparam__3-states -----------------------------------------------------
 
-library(bootstrap)
-#theta <- function(x){mean(x)} 
-#results = bootstrap(testFile,100,theta) 
-library(boot)
-library(parallel)
-
 semiparametric_RScop_boot <- function(x) {
-  #This function performs the bootstrap for the estimation of standard errors of RSStC model with 3 states
-  #adopting the semiparametric approach
-  #x is the matrix of observations
+  # This function performs the bootstrap for the estimation of standard errors of RSStC model parameters
+  # with 3 states, estimated adopting the semiparametric approach
+  
+  # ARGUMENTS:
+  # x is the matrix of observations
+  
+  # VALUES:
+  # cop.pars is the vector of RSStC copula parameters
   
   #marginals
   R=apply(x,2,rank)/(dim(x)[1]+1)
@@ -62,26 +95,47 @@ semiparametric_RScop_boot <- function(x) {
 }
 
 l1=round(dim(x)[1]^(2/3))
-nboot=1000
-library(bootstrap)
-library(boot)
-startsp2=Sys.time()
+#nboot=1000
+nboot=2
+
+set.seed(1)
+startsp3=Sys.time()
 param_boot_3sp <- tsboot(x, semiparametric_RScop_boot, R = nboot, l = l1, sim = "geom",
-                         parallel = "multicore", ncpus = detectCores(), n.sim=dim(x)[1])
+                         parallel = "multicore", ncpus = detectCores()-1, n.sim=dim(x)[1])
 
-endsp2=Sys.time()
-endsp2-startsp2
+endsp3=Sys.time()
+endsp3-startsp3
 
+sp3=param_boot_3sp$t
+SE_sp3=apply(sp3,2,sd)
+reg=3
+
+# Standard errors:
+
+# Initial probabilities
+round(SE_sp3[1:reg],3)
+
+# Transition probabilities
+round(SE_sp3[(reg+1):(reg*reg+reg)],3)
+
+# Dependence matrices
+round(SE_sp3[(reg*reg+reg+1):(length(SE_sp3)-reg)],3)
+
+# Number of degrees-of-freedom
+round(tail(SE_sp3,reg),3)
 
 # param__2-states ---------------------------------------------------------
-library(rugarch)
-library(fGarch)
-library(skewt)
+
 parametric_RScop_boot <- function(x) {
-  #This function performs the bootstrap for the estimation of standard errors of RSStC model with 2 states
-  #adopting the parametric approach
-  #x is the matrix of observations: marginal distribution are here specified in terms of an ARMA(1,1)-GARCH(1,1)
-  #model with skewed GED for the error terms
+  # This function performs the bootstrap for the estimation of standard errors of RSStC model parameters
+  # with 2 states, estimated adopting the parametric approach and assuming an 
+  # ARMA(1,1)-GARCH(1,1) with skewed generalized error distribution model for the marginals
+  
+  # ARGUMENTS:
+  # x is the matrix of observations
+  
+  # VALUES:
+  # cop.pars is the vector of RSStC copula parameters
   
   #marginal parameters
   btc = x[,1]
@@ -138,39 +192,56 @@ parametric_RScop_boot <- function(x) {
   UU=cbind(U1,U2,U3,U4,U5)
   U=apply(UU,2,rank)/(dim(UU)[1]+1)
   
-  #RS copula param
-  #sourceCpp("RSest_trede_C.cpp")
   est_rsc=Est_comp_C(U,2)
   Qvec=as.vector(est_rsc$Q)
   Rvec=as.vector(apply(est_rsc$R,3,function(x)x[upper.tri(x)]))
-  #Rvec=as.vector(est_rsc$R)
   cop.pars=c(est_rsc$init,Qvec,Rvec,est_rsc$nu)
-  return(c(cop.pars,marg.pars))
+  return(cop.pars)
 }
 
-l1=round(dim(U)[1]^(2/3))
+l1=round(dim(x)[1]^(2/3))
 #nboot=1000
-nboot=100
+nboot=2
 
-library(bootstrap)
-library(boot)
+set.seed(1)
 startp2=Sys.time()
-param_boot_2p <- tsboot(U, parametric_RScop_boot, R = nboot, l = l1, sim = "geom",
-                        parallel = "multicore", ncpus = detectCores(), n.sim=dim(x)[1])
+param_boot_2p <- tsboot(x, parametric_RScop_boot, R = nboot, l = l1, sim = "geom",
+                        parallel = "multicore", ncpus = detectCores()-1, n.sim=dim(x)[1])
 
 endp2=Sys.time()
 endp2-startp2
 
+p2=param_boot_2p$t
+SE_p2=apply(p2,2,sd)
+reg=2
+
+# Standard errors
+
+# Initial probabilities
+round(SE_p2[1:reg],3)
+
+# Transition probabilities
+round(SE_p2[(reg+1):(reg*reg+reg)],3)
+
+# Dependence matrices
+round(SE_p2[(reg*reg+reg+1):(length(SE_p2)-reg)],3)
+
+# Number of degrees-of-freedom
+round(tail(SE_p2,reg),3)
+
 
 # param__3-states ---------------------------------------------------------
-library(rugarch)
-library(fGarch)
-library(skewt)
+
 parametric_RScop_boot <- function(x) {
-  #This function performs the bootstrap for the estimation of standard errors of RSStC model with 3 states
-  #adopting the parametric approach
-  #x is the matrix of observations: marginal distribution are here specified in terms of an ARMA(1,1)-GARCH(1,1)
-  #model with skewed GED for the error terms
+  # This function performs the bootstrap for the estimation of standard errors of RSStC model parameters
+  # with 3 states, estimated adopting the parametric approach and assuming an 
+  # ARMA(1,1)-GARCH(1,1) with skewed generalized error distribution model for the marginals
+  
+  # ARGUMENTS:
+  # x is the matrix of observations
+  
+  # VALUES:
+  # cop.pars is the vector of RSStC copula parameters
   
   #marginal parameters
   btc = x[,1]
@@ -233,18 +304,36 @@ parametric_RScop_boot <- function(x) {
   Rvec=as.vector(apply(est_rsc$R,3,function(x)x[upper.tri(x)]))
   #Rvec=as.vector(est_rsc$R)
   cop.pars=c(est_rsc$init,Qvec,Rvec,est_rsc$nu)
-  return(c(cop.pars,marg.pars))
+  return(cop.pars)
 }
 
-l1=round(dim(U)[1]^(2/3))
+l1=round(dim(x)[1]^(2/3))
 #nboot=1000
-nboot=100
+nboot=2
 
-library(bootstrap)
-library(boot)
+set.seed(1)
 startp=Sys.time()
-param_boot_3p <- tsboot(U, parametric_RScop_boot, R = nboot, l = l1, sim = "geom",
-                        parallel = "multicore", ncpus = detectCores(), n.sim=dim(x)[1])
+param_boot_3p <- tsboot(x, parametric_RScop_boot, R = nboot, l = l1, sim = "geom",
+                        parallel = "multicore", ncpus = detectCores()-1, n.sim=dim(x)[1])
 
 endp=Sys.time()
 endp-startp
+
+p3=param_boot_3p$t
+SE_p3=apply(p3,2,sd)
+reg=3
+
+# Standard errors:
+
+# Initial probabilities
+round(SE_p3[1:reg],3)
+
+# Transition probabilities
+round(SE_p3[(reg+1):(reg*reg+reg)],3)
+
+# Dependence matrices
+round(SE_p3[(reg*reg+reg+1):(length(SE_p3)-reg)],3)
+
+# Number of degrees-of-freedom
+round(tail(SE_p3,reg),3)
+
