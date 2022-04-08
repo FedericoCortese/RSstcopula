@@ -52,26 +52,26 @@ Qsim = sapply(sim_est_25, function(x) x$Q)
 Qmean=matrix(rowMeans(Qsim),2,2)
 #abs(Qmean-Qtrue2)
 Qvar=apply(Qsim,1,var)
-sqrt((Qmean-Qtrue2)^2+Qvar)
+RMSE_Q=sqrt((Qmean-Qtrue2)^2+Qvar)
 
 Rsim=sapply(sim_est_25, function(x) x$R)
 Rmean=array(rowMeans(Rsim),dim=c(5,5,2))
 #abs(Rmean-Rtrue2)
 Rvar=apply(Rsim,1,var)
 Rvar=array(Rvar,dim=c(5,5,2))
-sqrt((Rmean-Rtrue2)^2+Rvar)
+RMSE_Rtrue=sqrt((Rmean-Rtrue2)^2+Rvar)
 
 initsim=sapply(sim_est_25, function(x) x$init)
 initmean=c(rowMeans(initsim))
 #abs(initmean-inittrue2)
 initvar=apply(initsim,1,var)
-sqrt((initmean-inittrue2)^2+initvar)
+RMSE_init=sqrt((initmean-inittrue2)^2+initvar)
 
 nusim=sapply(sim_est_25, function(x) x$nu)
 numean=c(rowMeans(nusim))
 #abs(numean-nutrue2)
 nuvar=apply(nusim,1,var)
-sqrt((numean-nutrue2)^2+nuvar)
+RMSE_nu=sqrt((numean-nutrue2)^2+nuvar)
 
 
 # Second scenario ---------------------------------------------------------
@@ -114,44 +114,42 @@ stime_trede <- function(seed) {
   Us=copSim(1500,5,Rtrue,nutrue,Qtrue,inittrue,seed)
   
   est = Est_comp_C(Us, reg=3, maxiter = 1000,eps=1e-08, 
-                   ninit = 1,h=5)
+                   ninit = 1,h=0)
   return(est)
 }
 
-D=1000
-#D=2
+#D=1000
+D=2
 start = Sys.time()
-sim_est_35 <- parallel::mclapply(X=1:D, stime_trede, mc.cores = parallel::detectCores())
+sim_est_35 <- parallel::mclapply(X=1:D, stime_trede, mc.cores = parallel::detectCores()-1)
 end = Sys.time()
 elapsed = end - start
-
-save(sim_est_35,file="sim_est_35.Rdata")
 
 # Biases and of the estimates are computed via the following code
 nusim=sapply(sim_est_35, function(x) x$nu)
 numean=rowMeans(nusim)
 #abs(numean-nutrue)
 nuvar=apply(nusim,1,var)
-sqrt((numean-nutrue)^2+nuvar)
+RMSE_nu=sqrt((numean-nutrue)^2+nuvar)
 
 Qsim = sapply(sim_est_35, function(x) x$Q)
 Qmean=matrix(rowMeans(Qsim),3,3)
 #abs(Qmean-Qtrue)
 Qvar=apply(Qsim,1,var)
-sqrt((Qmean-Qtrue)^2+Qvar)
+RMSE_Q=sqrt((Qmean-Qtrue)^2+Qvar)
 
 Rsim=sapply(sim_est_35, function(x) x$R)
 Rmean=array(rowMeans(Rsim),dim=c(5,5,3))
 #abs(Rmean-Rtrue)
 Rvar=apply(Rsim,1,var)
 Rvar=array(Rvar,dim=c(5,5,3))
-sqrt((Rmean-Rtrue)^2+Rvar)
+RMSE_R=round(sqrt((Rmean-Rtrue)^2+Rvar),3)
 
 initsim=sapply(sim_est_35, function(x) x$init)
 initmean=rowMeans(initsim)
 #abs(initmean-inittrue)
 initvar=apply(initsim,1,var)
-sqrt((initmean-inittrue)^2+initvar)
+RMSE_init=sqrt((initmean-inittrue)^2+initvar)
 
 
 # Varying the number of time observations -----------------------------------------
@@ -182,26 +180,25 @@ Rtrue2[,,2]=R2;
 inittrue2=c(1/2,1/2)
 
 Qtrue3=matrix(c(.7,.2,.1,
-                .3,.6,.1,
-                .1,.1,.8),3,3,byrow=T)
-nutrue3=c(3,6,10)
-R1=matrix(c(1,.9,.7,.8,.8,
-            .9, 1,.75,.9,.8,
-            .7, .75, 1,.7,.8,
-            .8,.9,.7,1,.8,
-            .8,.8,.8,.8,1),5,5)
+                .2,.7,.1,
+                .1,.2,.7),3,3,byrow=T)
+nutrue3=c(3,7,15)
+R1=matrix(c(1,0.9,0.9,0.9,0.9,
+            0.9,1,0.9,0.9,0.9,
+            0.9,0.9,1,0.9,0.9,
+            0.9,0.9,0.9,1,0.9,
+            0.9,0.9,0.9,0.9,1),5,5,byrow = T)
+R2=matrix(c(1.000, 0.4, 0.5, 0.5, 0.4,
+            0.4, 1.000, 0.4, 0.5, 0.4,
+            0.5,0.4 ,1.000, 0.5, 0.5,
+            0.5, 0.5 ,0.5 ,1.000 ,0.4,
+            0.4, 0.4, 0.5 ,0.4, 1.000),5,5,byrow=T)
 
-R2=matrix(c(1,.5,.3,.5,.4,
-            .5, 1,.4,.4,.5,
-            .3, .4, 1,.4,.5,
-            .5,.4,.4,1,.3,
-            .4,.5,.5,.3,1),5,5)
-
-R3=matrix(c(1,.1,.15,.05,.05,
-            .1,1,-.1,.1,-0.05,
-            .15,-.1,1,.05,.1,
-            .05,.1,.05,1,-.01,
-            .05,-.05,.1,-.01,1),5,5)
+R3=matrix(c(1.000,  0.2 , 0 , 0.1 ,0,  
+            0.2,  1.000, 0 , 0.2,0.2,
+            0 , 0 , 1.000  ,0.1  ,0.2,
+            0.1 , 0.2  ,0.1, 1.000,  0,
+            0 , 0.2 , 0.2 , 0 , 1.000),5,5,byrow=T)
 
 Rtrue3=array(0,dim=c(5,5,3))
 Rtrue3[,,1]=R1;
@@ -212,9 +209,9 @@ inittrue3=c(1/3,1/3,1/3)
 
 # Four possible time lengths are considered: 500, 1000, 1500 and 2000
 n_sim <- seq(500, 2000, by=500)
-D=1000
+#D=1000
 #n_seed <- 1:D
-#D=5
+D=2
 n_seed <- 1:D
 
 simulazione <- expand.grid(n_seed=n_seed, n_sim=n_sim)
@@ -223,7 +220,7 @@ stime_trede <- function(seed,n_sim,reg,Rtrue,nutrue,Qtrue,inittrue) {
   Us=copSim(n_sim,d=5,Rtrue,nutrue,Qtrue,inittrue,seed)
   
   est = Est_comp_C(Us, reg=reg, maxiter = 1000,eps=1e-08, 
-                   ninit = 1,h=7)
+                   ninit = 1,h=0)
   return(est)
 }
 
@@ -246,7 +243,6 @@ sim_est_T3 <- parallel::mclapply(X=1:nrow(simulazione),
                                 mc.cores = parallel::detectCores()-1)
 endd = Sys.time()
 elapsedd = endd - startd
-save(sim_est_T3,file="sim_est_T3.Rdata")
 
 # Average computational times for the 2-states RSStC model are computed via the following
 library(hms)
@@ -259,108 +255,108 @@ t2_2000=mean(time_T2[(3*D+1):(4*D)])
 #RMSE varying T for RSStC model with 2 states (sim_est_n2)
 
 #500 observations
-Qsim = sapply(sim_est_T2[1:1000], function(x) x$Q)
+Qsim = sapply(sim_est_T2[1:D], function(x) x$Q)
 Qmean=matrix(rowMeans(Qsim),2,2)
 #abs(Qmean-Qtrue2)
 Qvar=apply(Qsim,1,var)
-sqrt((Qmean-Qtrue2)^2+Qvar)
+RMSE_Q=sqrt((Qmean-Qtrue2)^2+Qvar)
 
-Rsim=sapply(sim_est_T2[1:1000], function(x) x$R)
+Rsim=sapply(sim_est_T2[1:D], function(x) x$R)
 Rmean=array(rowMeans(Rsim),dim=c(5,5,2))
 #abs(Rmean-Rtrue2)
 Rvar=apply(Rsim,1,var)
 Rvar=array(Rvar,dim=c(5,5,2))
-sqrt((Rmean-Rtrue2)^2+Rvar)
+RMSE_R=sqrt((Rmean-Rtrue2)^2+Rvar)
 
-initsim=sapply(sim_est_T2[1:1000], function(x) x$init)
+initsim=sapply(sim_est_T2[1:D], function(x) x$init)
 initmean=c(rowMeans(initsim))
 #abs(initmean-inittrue2)
 initvar=apply(initsim,1,var)
-sqrt((initmean-inittrue2)^2+initvar)
+RMSE_init=sqrt((initmean-inittrue2)^2+initvar)
 
-nusim=sapply(sim_est_T2[1:1000], function(x) x$nu)
+nusim=sapply(sim_est_T2[1:D], function(x) x$nu)
 numean=c(rowMeans(nusim))
 #abs(numean-nutrue2)
 nuvar=apply(nusim,1,var)
-sqrt((numean-nutrue2)^2+nuvar)
+RMSE_nu=sqrt((numean-nutrue2)^2+nuvar)
 
 #1000 observations
-Qsim = sapply(sim_est_T2[1001:2000], function(x) x$Q)
+Qsim = sapply(sim_est_T2[(D+1):(2*D)], function(x) x$Q)
 Qmean=matrix(rowMeans(Qsim),2,2)
 #abs(Qmean-Qtrue2)
 Qvar=apply(Qsim,1,var)
-sqrt((Qmean-Qtrue2)^2+Qvar)
+RMSE_Q=sqrt((Qmean-Qtrue2)^2+Qvar)
 
-Rsim=sapply(sim_est_T2[1001:2000], function(x) x$R)
+Rsim=sapply(sim_est_T2[(D+1):(2*D)], function(x) x$R)
 Rmean=array(rowMeans(Rsim),dim=c(5,5,2))
 #abs(Rmean-Rtrue2)
 Rvar=apply(Rsim,1,var)
 Rvar=array(Rvar,dim=c(5,5,2))
-sqrt((Rmean-Rtrue2)^2+Rvar)
+RMSE_R=sqrt((Rmean-Rtrue2)^2+Rvar)
 
-initsim=sapply(sim_est_T2[1001:2000], function(x) x$init)
+initsim=sapply(sim_est_T2[(D+1):(2*D)], function(x) x$init)
 initmean=c(rowMeans(initsim))
 #abs(initmean-inittrue2)
 initvar=apply(initsim,1,var)
-sqrt((initmean-inittrue2)^2+initvar)
+RMSE_init=sqrt((initmean-inittrue2)^2+initvar)
 
-nusim=sapply(sim_est_T2[1001:2000], function(x) x$nu)
+nusim=sapply(sim_est_T2[(D+1):(2*D)], function(x) x$nu)
 numean=c(rowMeans(nusim))
 #abs(numean-nutrue2)
 nuvar=apply(nusim,1,var)
-sqrt((numean-nutrue2)^2+nuvar)
+RMSE_nu=sqrt((numean-nutrue2)^2+nuvar)
 
 #1500 observations
-Qsim = sapply(sim_est_T2[2001:3000], function(x) x$Q)
+Qsim = sapply(sim_est_T2[(2*D+1):(3*D)], function(x) x$Q)
 Qmean=matrix(rowMeans(Qsim),2,2)
 #abs(Qmean-Qtrue2)
 Qvar=apply(Qsim,1,var)
-sqrt((Qmean-Qtrue2)^2+Qvar)
+RMSE_Q=sqrt((Qmean-Qtrue2)^2+Qvar)
 
-Rsim=sapply(sim_est_T2[2001:3000], function(x) x$R)
+Rsim=sapply(sim_est_T2[(2*D+1):(3*D)], function(x) x$R)
 Rmean=array(rowMeans(Rsim),dim=c(5,5,2))
 #abs(Rmean-Rtrue2)
 Rvar=apply(Rsim,1,var)
 Rvar=array(Rvar,dim=c(5,5,2))
-sqrt((Rmean-Rtrue2)^2+Rvar)
+RMSE_R=sqrt((Rmean-Rtrue2)^2+Rvar)
 
-initsim=sapply(sim_est_T2[2001:3000], function(x) x$init)
+initsim=sapply(sim_est_T2[(2*D+1):(3*D)], function(x) x$init)
 initmean=c(rowMeans(initsim))
 #abs(initmean-inittrue2)
 initvar=apply(initsim,1,var)
-sqrt((initmean-inittrue2)^2+initvar)
+RMSE_init=sqrt((initmean-inittrue2)^2+initvar)
 
-nusim=sapply(sim_est_T2[2001:3000], function(x) x$nu)
+nusim=sapply(sim_est_T2[(2*D+1):(3*D)], function(x) x$nu)
 numean=c(rowMeans(nusim))
 #abs(numean-nutrue2)
 nuvar=apply(nusim,1,var)
-sqrt((numean-nutrue2)^2+nuvar)
+RMSE_nu=sqrt((numean-nutrue2)^2+nuvar)
 
 #2000 observations
-Qsim = sapply(sim_est_T2[3001:4000], function(x) x$Q)
+Qsim = sapply(sim_est_T2[(3*D+1):(4*D)], function(x) x$Q)
 Qmean=matrix(rowMeans(Qsim),2,2)
 #abs(Qmean-Qtrue2)
 Qvar=apply(Qsim,1,var)
-sqrt((Qmean-Qtrue2)^2+Qvar)
+RMSE_Q=sqrt((Qmean-Qtrue2)^2+Qvar)
 
-Rsim=sapply(sim_est_T2[3001:4000], function(x) x$R)
+Rsim=sapply(sim_est_T2[(3*D+1):(4*D)], function(x) x$R)
 Rmean=array(rowMeans(Rsim),dim=c(5,5,2))
 #abs(Rmean-Rtrue2)
 Rvar=apply(Rsim,1,var)
 Rvar=array(Rvar,dim=c(5,5,2))
-sqrt((Rmean-Rtrue2)^2+Rvar)
+RMSE_R=sqrt((Rmean-Rtrue2)^2+Rvar)
 
-initsim=sapply(sim_est_T2[3001:4000], function(x) x$init)
+initsim=sapply(sim_est_T2[(3*D+1):(4*D)], function(x) x$init)
 initmean=c(rowMeans(initsim))
 #abs(initmean-inittrue2)
 initvar=apply(initsim,1,var)
-sqrt((initmean-inittrue2)^2+initvar)
+RMSE_init=sqrt((initmean-inittrue2)^2+initvar)
 
-nusim=sapply(sim_est_T2[3001:4000], function(x) x$nu)
+nusim=sapply(sim_est_T2[(3*D+1):(4*D)], function(x) x$nu)
 numean=c(rowMeans(nusim))
 #abs(numean-nutrue2)
 nuvar=apply(nusim,1,var)
-sqrt((numean-nutrue2)^2+nuvar)
+RMSE_nu=sqrt((numean-nutrue2)^2+nuvar)
 
 # Average computational times for the 3-states RSStC model are computed via the following
 time_T3 = sapply(sim_est_T3, function(x) as_hms(x$elaps_time))
@@ -372,108 +368,108 @@ t3_2000=mean(time_T3[(3*D+1):(4*D)])
 #RMSE varying T for RSStC model with 2 states
 
 #500 observations
-Qsim = sapply(sim_est_T3[1:1000], function(x) x$Q)
+Qsim = sapply(sim_est_T3[1:D], function(x) x$Q)
 Qmean=matrix(rowMeans(Qsim),3,3)
 #abs(Qmean-Qtrue2)
 Qvar=apply(Qsim,1,var)
-sqrt((Qmean-Qtrue3)^2+Qvar)
+RMSE_Q=sqrt((Qmean-Qtrue3)^2+Qvar)
 
-Rsim=sapply(sim_est_T3[1:1000], function(x) x$R)
+Rsim=sapply(sim_est_T3[1:D], function(x) x$R)
 Rmean=array(rowMeans(Rsim),dim=c(5,5,3))
 #abs(Rmean-Rtrue2)
 Rvar=apply(Rsim,1,var)
 Rvar=array(Rvar,dim=c(5,5,3))
-sqrt((Rmean-Rtrue3)^2+Rvar)
+RMSE_R=sqrt((Rmean-Rtrue3)^2+Rvar)
 
-initsim=sapply(sim_est_T3[1:1000], function(x) x$init)
+initsim=sapply(sim_est_T3[1:D], function(x) x$init)
 initmean=rowMeans(initsim)
 #abs(initmean-inittrue2)
 initvar=apply(initsim,1,var)
-sqrt((initmean-inittrue3)^2+initvar)
+RMSE_init=sqrt((initmean-inittrue3)^2+initvar)
 
-nusim=sapply(sim_est_T3[1:1000], function(x) x$nu)
+nusim=sapply(sim_est_T3[1:D], function(x) x$nu)
 numean=rowMeans(nusim)
 #abs(numean-nutrue2)
 nuvar=apply(nusim,1,var)
-sqrt((numean-nutrue3)^2+nuvar)
+RMSE_nu=sqrt((numean-nutrue3)^2+nuvar)
 
 #1000 observations
-Qsim = sapply(sim_est_T3[1001:2000], function(x) x$Q)
+Qsim = sapply(sim_est_T3[(D+1):(2*D)], function(x) x$Q)
 Qmean=matrix(rowMeans(Qsim),3,3)
 #abs(Qmean-Qtrue2)
 Qvar=apply(Qsim,1,var)
-sqrt((Qmean-Qtrue3)^2+Qvar)
+RMSE_Q=sqrt((Qmean-Qtrue3)^2+Qvar)
 
-Rsim=sapply(sim_est_T3[1001:2000], function(x) x$R)
+Rsim=sapply(sim_est_T3[(D+1):(2*D)], function(x) x$R)
 Rmean=array(rowMeans(Rsim),dim=c(5,5,3))
 #abs(Rmean-Rtrue2)
 Rvar=apply(Rsim,1,var)
 Rvar=array(Rvar,dim=c(5,5,3))
-sqrt((Rmean-Rtrue3)^2+Rvar)
+RMSE_R=sqrt((Rmean-Rtrue3)^2+Rvar)
 
-initsim=sapply(sim_est_T3[1001:2000], function(x) x$init)
+initsim=sapply(sim_est_T3[(D+1):(2*D)], function(x) x$init)
 initmean=rowMeans(initsim)
 #abs(initmean-inittrue2)
 initvar=apply(initsim,1,var)
-sqrt((initmean-inittrue3)^2+initvar)
+RMSE_init=sqrt((initmean-inittrue3)^2+initvar)
 
-nusim=sapply(sim_est_T3[1001:2000], function(x) x$nu)
+nusim=sapply(sim_est_T3[(D+1):(2*D)], function(x) x$nu)
 numean=rowMeans(nusim)
 #abs(numean-nutrue2)
 nuvar=apply(nusim,1,var)
-sqrt((numean-nutrue3)^2+nuvar)
+RMSE_nu=sqrt((numean-nutrue3)^2+nuvar)
 
 #1500 observations
-Qsim = sapply(sim_est_T3[2001:3000], function(x) x$Q)
+Qsim = sapply(sim_est_T3[(2*D+1):(3*D)], function(x) x$Q)
 Qmean=matrix(rowMeans(Qsim),3,3)
 #abs(Qmean-Qtrue2)
 Qvar=apply(Qsim,1,var)
-sqrt((Qmean-Qtrue3)^2+Qvar)
+RMSE_Q=sqrt((Qmean-Qtrue3)^2+Qvar)
 
-Rsim=sapply(sim_est_T3[2001:3000], function(x) x$R)
+Rsim=sapply(sim_est_T3[(2*D+1):(3*D)], function(x) x$R)
 Rmean=array(rowMeans(Rsim),dim=c(5,5,3))
 #abs(Rmean-Rtrue2)
 Rvar=apply(Rsim,1,var)
 Rvar=array(Rvar,dim=c(5,5,3))
-sqrt((Rmean-Rtrue3)^2+Rvar)
+RMSE_R=sqrt((Rmean-Rtrue3)^2+Rvar)
 
-initsim=sapply(sim_est_T3[2001:3000], function(x) x$init)
+initsim=sapply(sim_est_T3[(2*D+1):(3*D)], function(x) x$init)
 initmean=rowMeans(initsim)
 #abs(initmean-inittrue2)
 initvar=apply(initsim,1,var)
-sqrt((initmean-inittrue3)^2+initvar)
+RMSE_init=sqrt((initmean-inittrue3)^2+initvar)
 
-nusim=sapply(sim_est_T3[2001:3000], function(x) x$nu)
+nusim=sapply(sim_est_T3[(2*D+1):(3*D)], function(x) x$nu)
 numean=rowMeans(nusim)
 #abs(numean-nutrue2)
 nuvar=apply(nusim,1,var)
-sqrt((numean-nutrue3)^2+nuvar)
+RMSE_nu=sqrt((numean-nutrue3)^2+nuvar)
 
 #2000 observations
-Qsim = sapply(sim_est_T3[3001:4000], function(x) x$Q)
+Qsim = sapply(sim_est_T3[(3*D+1):(4*D)], function(x) x$Q)
 Qmean=matrix(rowMeans(Qsim),3,3)
 #abs(Qmean-Qtrue2)
 Qvar=apply(Qsim,1,var)
-sqrt((Qmean-Qtrue3)^2+Qvar)
+RMSE_Q=sqrt((Qmean-Qtrue3)^2+Qvar)
 
-Rsim=sapply(sim_est_T3[3001:4000], function(x) x$R)
+Rsim=sapply(sim_est_T3[(3*D+1):(4*D)], function(x) x$R)
 Rmean=array(rowMeans(Rsim),dim=c(5,5,3))
 #abs(Rmean-Rtrue2)
 Rvar=apply(Rsim,1,var)
 Rvar=array(Rvar,dim=c(5,5,3))
-sqrt((Rmean-Rtrue3)^2+Rvar)
+RMSE_R=sqrt((Rmean-Rtrue3)^2+Rvar)
 
-initsim=sapply(sim_est_T3[3001:4000], function(x) x$init)
+initsim=sapply(sim_est_T3[(3*D+1):(4*D)], function(x) x$init)
 initmean=rowMeans(initsim)
 #abs(initmean-inittrue2)
 initvar=apply(initsim,1,var)
-sqrt((initmean-inittrue3)^2+initvar)
+RMSE_init=sqrt((initmean-inittrue3)^2+initvar)
 
-nusim=sapply(sim_est_T3[3001:4000], function(x) x$nu)
+nusim=sapply(sim_est_T3[(3*D+1):(4*D)], function(x) x$nu)
 numean=rowMeans(nusim)
 #abs(numean-nutrue2)
 nuvar=apply(nusim,1,var)
-sqrt((numean-nutrue3)^2+nuvar)
+RMSE_nu=sqrt((numean-nutrue3)^2+nuvar)
 
 
 # Varying the number of variables -----------------------------------------
@@ -534,11 +530,11 @@ d2_10=mean(time_d2[(2*D+1):(3*D)])
 #RMSE varying the number of variables for RSStC with 2 states
 
 #d=2
-Qsim = sapply(sim_est_d2[1:1000], function(x) x$Q)
+Qsim = sapply(sim_est_d2[1:D], function(x) x$Q)
 Qmean=matrix(rowMeans(Qsim),2,2)
 #abs(Qmean-Qtrue2)
 Qvar=apply(Qsim,1,var)
-sqrt((Qmean-Qtrue)^2+Qvar)
+QRMSE=sqrt((Qmean-Qtrue)^2+Qvar)
 
 d=2
 R1=matrix(.9,d,d)
@@ -548,31 +544,31 @@ diag(R2)=1
 Rtrue=array(0,dim=c(d,d,2))
 Rtrue[,,1]=R1
 Rtrue[,,2]=R2
-Rsim=sapply(sim_est_d2[1:1000], function(x) x$R)
+Rsim=sapply(sim_est_d2[1:D], function(x) x$R)
 Rmean=array(rowMeans(Rsim),dim=c(d,d,2))
 #abs(Rmean-Rtrue2)
 Rvar=apply(Rsim,1,var)
 Rvar=array(Rvar,dim=c(d,d,2))
-sqrt((Rmean-Rtrue)^2+Rvar)
+RRMSE=sqrt((Rmean-Rtrue)^2+Rvar)
 
-initsim=sapply(sim_est_d2[1:1000], function(x) x$init)
+initsim=sapply(sim_est_d2[1:D], function(x) x$init)
 initmean=rowMeans(initsim)
 #abs(initmean-inittrue2)
 initvar=apply(initsim,1,var)
-sqrt((initmean-inittrue)^2+initvar)
+initRMSE=sqrt((initmean-inittrue)^2+initvar)
 
-nusim=sapply(sim_est_d2[1:1000], function(x) x$nu)
+nusim=sapply(sim_est_d2[1:D], function(x) x$nu)
 numean=rowMeans(nusim)
 #abs(numean-nutrue2)
 nuvar=apply(nusim,1,var)
-sqrt((numean-nutrue)^2+nuvar)
+nuRMSE=sqrt((numean-nutrue)^2+nuvar)
 
 #d=5
-Qsim = sapply(sim_est_d2[1001:2000], function(x) x$Q)
+Qsim = sapply(sim_est_d2[(D+1):(2*D)], function(x) x$Q)
 Qmean=matrix(rowMeans(Qsim),2,2)
 #abs(Qmean-Qtrue2)
 Qvar=apply(Qsim,1,var)
-sqrt((Qmean-Qtrue)^2+Qvar)
+QRMSE=sqrt((Qmean-Qtrue)^2+Qvar)
 
 d=5
 R1=matrix(.9,d,d)
@@ -582,31 +578,31 @@ diag(R2)=1
 Rtrue=array(0,dim=c(d,d,2))
 Rtrue[,,1]=R1
 Rtrue[,,2]=R2
-Rsim=sapply(sim_est_d2[1001:2000], function(x) x$R)
+Rsim=sapply(sim_est_d2[(D+1):(2*D)], function(x) x$R)
 Rmean=array(rowMeans(Rsim),dim=c(d,d,2))
 #abs(Rmean-Rtrue2)
 Rvar=apply(Rsim,1,var)
 Rvar=array(Rvar,dim=c(d,d,2))
-sqrt((Rmean-Rtrue)^2+Rvar)
+RRMSE=sqrt((Rmean-Rtrue)^2+Rvar)
 
-initsim=sapply(sim_est_d2[1001:2000], function(x) x$init)
+initsim=sapply(sim_est_d2[(D+1):(2*D)], function(x) x$init)
 initmean=rowMeans(initsim)
 #abs(initmean-inittrue2)
 initvar=apply(initsim,1,var)
-sqrt((initmean-inittrue)^2+initvar)
+initRMSE=sqrt((initmean-inittrue)^2+initvar)
 
-nusim=sapply(sim_est_d2[1001:2000], function(x) x$nu)
+nusim=sapply(sim_est_d2[(D+1):(2*D)], function(x) x$nu)
 numean=rowMeans(nusim)
 #abs(numean-nutrue2)
 nuvar=apply(nusim,1,var)
-sqrt((numean-nutrue)^2+nuvar)
+nuRMSE=sqrt((numean-nutrue)^2+nuvar)
 
 #d=10
-Qsim = sapply(sim_est_d2[2001:3000], function(x) x$Q)
+Qsim = sapply(sim_est_d2[(2*D+1):(3*D)], function(x) x$Q)
 Qmean=matrix(rowMeans(Qsim),2,2)
 #abs(Qmean-Qtrue2)
 Qvar=apply(Qsim,1,var)
-sqrt((Qmean-Qtrue)^2+Qvar)
+QRMSE=sqrt((Qmean-Qtrue)^2+Qvar)
 
 d=10
 R1=matrix(.9,d,d)
@@ -616,38 +612,38 @@ diag(R2)=1
 Rtrue=array(0,dim=c(d,d,2))
 Rtrue[,,1]=R1
 Rtrue[,,2]=R2
-Rsim=sapply(sim_est_d2[2001:3000], function(x) x$R)
+Rsim=sapply(sim_est_d2[(2*D+1):(3*D)], function(x) x$R)
 Rmean=array(rowMeans(Rsim),dim=c(d,d,2))
 #abs(Rmean-Rtrue2)
 Rvar=apply(Rsim,1,var)
 Rvar=array(Rvar,dim=c(d,d,2))
-sqrt((Rmean-Rtrue)^2+Rvar)
+RRMSE=sqrt((Rmean-Rtrue)^2+Rvar)
 
-initsim=sapply(sim_est_d2[2001:3000], function(x) x$init)
+initsim=sapply(sim_est_d2[(2*D+1):(3*D)], function(x) x$init)
 initmean=rowMeans(initsim)
 #abs(initmean-inittrue2)
 initvar=apply(initsim,1,var)
-sqrt((initmean-inittrue)^2+initvar)
+initRMSE=sqrt((initmean-inittrue)^2+initvar)
 
-nusim=sapply(sim_est_d2[2001:3000], function(x) x$nu)
+nusim=sapply(sim_est_d2[(2*D+1):(3*D)], function(x) x$nu)
 numean=rowMeans(nusim)
 #abs(numean-nutrue2)
 nuvar=apply(nusim,1,var)
-sqrt((numean-nutrue)^2+nuvar)
+nuRMSE=sqrt((numean-nutrue)^2+nuvar)
 
 
 # The followings are the parameters for simulating a 3-states RSStC model
 inittrue=rep(1/3,3)
 
 Qtrue=matrix(c(.7,.2,.1,
-                .3,.6,.1,
-                .1,.1,.8),3,3,byrow=T)
-nutrue=c(3,6,10)
+                .2,.7,.1,
+                .1,.2,.7),3,3,byrow=T)
+nutrue=c(3,7,15)
 
-D=1000
+#D=100
+#n_seed <- 1:100
+D=2
 n_seed <- 1:D
-# D=2
-# n_seed <- 1:D
 n_d=c(2,5,10)
 
 simulazione <- expand.grid(n_seed=n_seed, n_d=n_d)
@@ -667,7 +663,7 @@ stime_trede <- function(seed,d,nutrue,Qtrue,inittrue) {
   Us=copSim(1000,d=d,Rtrue,nutrue,Qtrue,inittrue,seed)
   
   est = Est_comp_C(Us, reg=3, maxiter = 1000,eps=1e-08, 
-                   ninit = 1,h=6)
+                   ninit = 1,h=0)
   return(est)
 }
 
@@ -678,11 +674,9 @@ sim_est_d3 <- parallel::mclapply(X=1:nrow(simulazione),
                                                         d=simulazione[x,]$n_d,
                                                         nutrue=nutrue,
                                                         Qtrue=Qtrue,inittrue = inittrue) ,
-                                mc.cores = parallel::detectCores())
+                                mc.cores = parallel::detectCores()-1)
 endd = Sys.time()
 elapsedd = endd - startd
-
-save(sim_est_d3,file="sim_est_d3.Rdata")
 
 # In the following, we compute the average computational time demanded for the estimation of the 
 # 3-states RSStC model for vatying time length T
@@ -694,11 +688,11 @@ d3_10=mean(time_d3[(2*D+1):(3*D)])
 #RMSE varying the number of variables for RSStC with 3 states
 
 #d=2
-Qsim = sapply(sim_est_d3[1:1000], function(x) x$Q)
+Qsim = sapply(sim_est_d3[1:D], function(x) x$Q)
 Qmean=matrix(rowMeans(Qsim),3,3)
 #abs(Qmean-Qtrue2)
 Qvar=apply(Qsim,1,var)
-sqrt((Qmean-Qtrue)^2+Qvar)
+QRMSE=sqrt((Qmean-Qtrue)^2+Qvar)
 
 d=2
 R1=matrix(.9,d,d)
@@ -711,31 +705,31 @@ Rtrue=array(0,dim=c(d,d,3))
 Rtrue[,,1]=R1
 Rtrue[,,2]=R2
 Rtrue[,,3]=R3
-Rsim=sapply(sim_est_d3[1:1000], function(x) x$R)
+Rsim=sapply(sim_est_d3[1:D], function(x) x$R)
 Rmean=array(rowMeans(Rsim),dim=c(d,d,3))
 #abs(Rmean-Rtrue2)
 Rvar=apply(Rsim,1,var)
 Rvar=array(Rvar,dim=c(d,d,3))
-sqrt((Rmean-Rtrue)^2+Rvar)
+RRMSE=sqrt((Rmean-Rtrue)^2+Rvar)
 
-initsim=sapply(sim_est_d3[1:1000], function(x) x$init)
+initsim=sapply(sim_est_d3[1:D], function(x) x$init)
 initmean=rowMeans(initsim)
 #abs(initmean-inittrue2)
 initvar=apply(initsim,1,var)
-sqrt((initmean-inittrue)^2+initvar)
+initRMSE=sqrt((initmean-inittrue)^2+initvar)
 
-nusim=sapply(sim_est_d3[1:1000], function(x) x$nu)
+nusim=sapply(sim_est_d3[1:D], function(x) x$nu)
 numean=rowMeans(nusim)
 #abs(numean-nutrue2)
 nuvar=apply(nusim,1,var)
-sqrt((numean-nutrue)^2+nuvar)
+nuRMSE=sqrt((numean-nutrue)^2+nuvar)
 
 #d=5
-Qsim = sapply(sim_est_d3[1001:2000], function(x) x$Q)
+Qsim = sapply(sim_est_d3[(D+1):(2*D)], function(x) x$Q)
 Qmean=matrix(rowMeans(Qsim),3,3)
 #abs(Qmean-Qtrue2)
 Qvar=apply(Qsim,1,var)
-sqrt((Qmean-Qtrue)^2+Qvar)
+QRMSE=sqrt((Qmean-Qtrue)^2+Qvar)
 
 d=5
 R1=matrix(.9,d,d)
@@ -748,31 +742,31 @@ Rtrue=array(0,dim=c(d,d,3))
 Rtrue[,,1]=R1
 Rtrue[,,2]=R2
 Rtrue[,,3]=R3
-Rsim=sapply(sim_est_d3[1001:2000], function(x) x$R)
+Rsim=sapply(sim_est_d3[(D+1):(2*D)], function(x) x$R)
 Rmean=array(rowMeans(Rsim),dim=c(d,d,3))
 #abs(Rmean-Rtrue2)
 Rvar=apply(Rsim,1,var)
 Rvar=array(Rvar,dim=c(d,d,3))
-sqrt((Rmean-Rtrue)^2+Rvar)
+RRMSE=sqrt((Rmean-Rtrue)^2+Rvar)
 
-initsim=sapply(sim_est_d3[1001:2000], function(x) x$init)
+initsim=sapply(sim_est_d3[(D+1):(2*D)], function(x) x$init)
 initmean=rowMeans(initsim)
 #abs(initmean-inittrue2)
 initvar=apply(initsim,1,var)
-sqrt((initmean-inittrue)^2+initvar)
+initRMSE=sqrt((initmean-inittrue)^2+initvar)
 
-nusim=sapply(sim_est_d3[1001:2000], function(x) x$nu)
+nusim=sapply(sim_est_d3[(D+1):(2*D)], function(x) x$nu)
 numean=rowMeans(nusim)
 #abs(numean-nutrue2)
 nuvar=apply(nusim,1,var)
-sqrt((numean-nutrue)^2+nuvar)
+nuRMSE=sqrt((numean-nutrue)^2+nuvar)
 
 #d=10
-Qsim = sapply(sim_est_d3[2001:3000], function(x) x$Q)
+Qsim = sapply(sim_est_d3[(2*D+1):(3*D)], function(x) x$Q)
 Qmean=matrix(rowMeans(Qsim),3,3)
 #abs(Qmean-Qtrue2)
 Qvar=apply(Qsim,1,var)
-sqrt((Qmean-Qtrue)^2+Qvar)
+QRMSE=sqrt((Qmean-Qtrue)^2+Qvar)
 
 d=10
 R1=matrix(.9,d,d)
@@ -785,22 +779,22 @@ Rtrue=array(0,dim=c(d,d,3))
 Rtrue[,,1]=R1
 Rtrue[,,2]=R2
 Rtrue[,,3]=R3
-Rsim=sapply(sim_est_d3[2001:3000], function(x) x$R)
+Rsim=sapply(sim_est_d3[(2*D+1):(3*D)], function(x) x$R)
 Rmean=array(rowMeans(Rsim),dim=c(d,d,3))
 #abs(Rmean-Rtrue2)
 Rvar=apply(Rsim,1,var)
 Rvar=array(Rvar,dim=c(d,d,3))
-sqrt((Rmean-Rtrue)^2+Rvar)
+RRMSE=sqrt((Rmean-Rtrue)^2+Rvar)
 
-initsim=sapply(sim_est_d3[2001:3000], function(x) x$init)
+initsim=sapply(sim_est_d3[(2*D+1):(3*D)], function(x) x$init)
 initmean=rowMeans(initsim)
 #abs(initmean-inittrue2)
 initvar=apply(initsim,1,var)
-sqrt((initmean-inittrue)^2+initvar)
+initRMSE=sqrt((initmean-inittrue)^2+initvar)
 
-nusim=sapply(sim_est_d3[2001:3000], function(x) x$nu)
+nusim=sapply(sim_est_d3[(2*D+1):(3*D)], function(x) x$nu)
 numean=rowMeans(nusim)
 #abs(numean-nutrue2)
 nuvar=apply(nusim,1,var)
-sqrt((numean-nutrue)^2+nuvar)
+nuRMSE=sqrt((numean-nutrue)^2+nuvar)
 
