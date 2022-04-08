@@ -154,7 +154,7 @@ RMSE_init=sqrt((initmean-inittrue)^2+initvar)
 
 # Varying the number of time observations -----------------------------------------
 
-# In this third scenario we focus on the computational time demanded for the estimation of 2- and 3-states
+# In this third scenario we focus on the computational time demanded and RMSE for the estimation of 2- and 3-states
 # RSStC models for varying number of time observations and variables
 
 # In this first step, we consider 2- and 3-states RSStC models varying the number 
@@ -520,8 +520,8 @@ sim_est_d2 <- parallel::mclapply(X=1:nrow(simulazione),
 endd = Sys.time()
 elapsedd = endd - startd
 
-# In the following, we compute the average computational time demanded for the estimation of the 
-# 2-states RSStC model for varying time length T
+# In the following, we compute the average computational time demanded and RMSE for the estimation of the 
+# 2-states RSStC model for varying dimension d
 time_d2 = sapply(sim_est_d2, function(x) as_hms(x$elaps_time))
 d2_2=mean(time_d2[1:D])
 d2_5=mean(time_d2[(D+1):(2*D)])
@@ -678,8 +678,8 @@ sim_est_d3 <- parallel::mclapply(X=1:nrow(simulazione),
 endd = Sys.time()
 elapsedd = endd - startd
 
-# In the following, we compute the average computational time demanded for the estimation of the 
-# 3-states RSStC model for vatying time length T
+# In the following, we compute the average computational time demanded and the RMSE 
+# for the estimation of the 3-states RSStC model for varying dimension d
 time_d3 = sapply(sim_est_d3, function(x) as_hms(x$elaps_time))
 d3_2=mean(time_d3[1:D])
 d3_5=mean(time_d3[(D+1):(2*D)])
