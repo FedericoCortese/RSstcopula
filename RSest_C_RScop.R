@@ -94,7 +94,7 @@ Est_comp_C=function(U, reg, maxiter = 1000,eps=1e-08,
   R=temp_R
   w=temp_w
   
-  K=(reg-1)+reg*(reg-1)+reg+d*(d-1)/2
+  K=(reg-1)+reg*(reg-1)+reg*d*(d-1)/2
   #llk=est$llk
   AIC=2*K-2*llk
   BIC=K*log(n)-2*llk
@@ -137,6 +137,51 @@ est$nu
 
 # or the estimated matrix of transition probabilities
 est$Q
+
+
+tailInd=function(est){
+  # This function estimates tail indices from a RSStC model. 
+  
+  # ARGUMENTS:
+  # est is the object estimated with the function Est_comp_C
+  
+  # VALUE
+  # tau is the matrix of estimated tail indices
+  
+  k=length(est$nu)
+  d=dim(est$R)[1]
+  lambda=array(0,dim=c(d,d,k))
+  for(i in 1:k){
+    R=est$R[,,i]
+    nu=est$nu[i]
+    lambda[,,i]=2*dt(-(sqrt(1+nu)*sqrt(1-R))/sqrt(1+R),df=nu+1)
+    diag(lambda[,,i])=1
+  }
+  return(lambda)
+}
+
+kendTau=function(est){
+  # This function estimates Kendall's taus from a RSStC model. 
+  
+  # ARGUMENTS:
+  # est is the object estimated with the function Est_comp_C
+  
+  # VALUE
+  # tau is the matrix of estimated Kendall's taus
+  
+  k=length(est$nu)
+  d=dim(est$R)[1]
+  tau=array(0,dim=c(d,d,k))
+  for(i in 1:k){
+    R=est$R[,,i]
+    #nu=est$nu[i]
+    tau[,,i]=asin(R)*2/pi
+    diag(tau[,,i])=1
+  }
+  return(tau)
+}
+
+
 
 
 # decoding ----------------------------------------------------------------
@@ -190,7 +235,43 @@ RScop.viterbi <- function(U, nc){
   for (i in (n - 1):1) {
     iv[i] <- which.max(Q[, iv[i + 1]] * xi[i, ])
   }
-  return(iv)
+  return(list(iv=iv,ldc=t(log(dc))))
+}
+
+ICL=function(est,U){
+  # This function computes the Integrated Completed Likelihood criterion
+  
+  # ARGUMENTS:
+  # est is the object estimated with the function Est_comp_C
+  # U is the matrix of pseudo-observations
+  
+  # VALUE
+  # icl is the Integrated Completed Likelihood value
+  
+  reg=length(est$nu)
+  d=dim(est$R)[1]
+  K=(reg-1)+reg*(reg-1)+reg*d*(d-1)/2
+  
+  vit=RScop.viterbi(U,est)
+  ldc=vit$ldc
+  s=vit$iv
+  
+  n=dim(U)[1]
+  IK=matrix(0,n,reg)
+  cllk=0
+  for(i in 1:reg){
+    IK[s==i,i]=1
+  }
+  L1=sum(IK*ldc)
+  L3=0
+  ind=which(est$Q == 0, arr.ind = TRUE)
+  est$Q[ind]=1
+  for(t in 2:n){
+    L3=L3+sum(IK[(t-1),]%*%t(IK[t,])*log(est$Q))
+  }
+  cllk=L1+L3
+  icl=K*log(n)-2*cllk
+  return(icl)
 }
 
 glob_dec=RScop.viterbi(Ur,est)
