@@ -6,7 +6,6 @@ The repository contains the following files:
 - *RSest_C_RScop.R* for simulating and estimating a RSStC model and for performing local and global decoding
 
 - *RSest_C.cpp* with useful functions implemented in C++.
-(Spiegare velocemente quali funzioni sono)
 This file must be saved on the working directory.
 
 - *sim_github.R* to perform the simulations proposed in the paper
