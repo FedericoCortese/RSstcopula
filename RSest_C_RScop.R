@@ -250,7 +250,7 @@ ICL=function(est,U){
   
   reg=length(est$nu)
   d=dim(est$R)[1]
-  K=(reg-1)+reg*(reg-1)+reg*d*(d-1)/2
+  K=reg+(reg-1)+reg*(reg-1)+reg*d*(d-1)/2
   
   vit=RScop.viterbi(U,est)
   ldc=vit$ldc
@@ -265,7 +265,7 @@ ICL=function(est,U){
   L1=sum(IK*ldc)
   L3=0
   ind=which(est$Q == 0, arr.ind = TRUE)
-  est$Q[ind]=1
+  est$Q[ind]=1e-16
   for(t in 2:n){
     L3=L3+sum(IK[(t-1),]%*%t(IK[t,])*log(est$Q))
   }
